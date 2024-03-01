@@ -13,3 +13,9 @@ variable "vpc_cidr" {
 variable "subnet_cidr" {
   default = "10.42.0.0/24"
 }
+resource "aws_vpc" "main" {
+  cidr_block = "${var.vpc_cidr}"
+  tags = {
+    Name = "tmp_vulnado_rev_shell_vpc"
+  }
+}
