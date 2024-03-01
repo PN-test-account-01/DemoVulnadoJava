@@ -30,13 +30,19 @@ resource "aws_route_table" "r" {
   }
 }
 
-resource "aws_subnet" "subnet" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "${var.subnet_cidr}"
-  availability_zone = "${var.region}b"
-  map_public_ip_on_launch = true
+resource "aws_instance" "receiver" {
+  ami           = "${data.aws_ami.amznlinux.id}"
+  instance_type = "t2.micro"
+  subnet_id = "${aws_subnet.subnet.id}"
+  key_name = "${aws_key_pair.attacker.key_name}"
+  vpc_security_group_ids = ["${aws_security_group.sg.id}"]
+  user_data = <<EOF
+#!/bin/bash
+yum update
+yum install -y nmap
+EOF
   tags = {
-    Name = "tmp_vulnado_rev_shell_subnet"
+    Name = "VulnadoReverseShellReceiver"
   }
 }
 
@@ -88,18 +94,12 @@ resource "aws_key_pair" "attacker" {
   public_key = "${var.public_key}"
 }
 
-resource "aws_instance" "receiver" {
-  ami           = "${data.aws_ami.amznlinux.id}"
-  instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.subnet.id}"
-  key_name = "${aws_key_pair.attacker.key_name}"
-  vpc_security_group_ids = ["${aws_security_group.sg.id}"]
-  user_data = <<EOF
-#!/bin/bash
-yum update
-yum install -y nmap
-EOF
+resource "aws_subnet" "subnet" {
+  vpc_id     = "${aws_vpc.main.id}"
+  cidr_block = "${var.subnet_cidr}"
+  availability_zone = "${var.region}b"
+  map_public_ip_on_launch = true
   tags = {
-    Name = "VulnadoReverseShellReceiver"
+    Name = "tmp_vulnado_rev_shell_subnet"
   }
 }
